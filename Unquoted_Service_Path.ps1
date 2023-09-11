@@ -33,8 +33,8 @@ if ($VulnerablePaths.Count -gt 0) {
     $ticketInfo = Create-Syncro-Ticket -Subject "Vulnerable Service Path Found" -IssueType "Security" -Status "New"
     $ticketId = $ticketInfo.ticket.id
 
-    # Start the timer
-    $startDateTime = Get-Date
+    # Start the timer with minimum time for Tech to create ticket from lead and elevate to required priviledges
+    $timeTaken = 7
 
     # Add initial comment
     Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketId -Subject "Initial Issue" -Body "Found vulnerable service path(s) that need to be fixed for vulnerabilities."
@@ -102,27 +102,26 @@ if ($VulnerablePaths.Count -gt 0) {
 
         # Logging activity for each corrected path
         Log-Activity -Message "Corrected vulnerable service path: $path" -EventName "Vulnerability Corrected"
+
+        # Add one minute to each corrected entry
+        $timeTaken++
     }
 
     # Add 'Completed' comment with the list of corrected paths
     $completedBody = "Corrected vulnerability in service paths of the following:`r`n" + ($CorrectedPaths -join "`r`n")
     Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketId -Subject "Completed" -Body $completedBody
 
-    # End the timer and calculate the rounded duration
-    $endDateTime = Get-Date
-    $timeTaken = $endDateTime - $startDateTime
     # Calculate the duration in minutes, rounded up to the nearest 5 minutes
     $roundedMinutes = [math]::Ceiling($timeTaken.TotalMinutes / 5) * 5
 
     # This ensures the following:
-    # 0-4 minutes -> 5 minutes
     # 5-9 minutes -> 10 minutes
     # 10-14 minutes -> 15 minutes
     # ... and so on
 
-    # Ensure a minimum of 5 minutes is recorded
-    if ($durationMinutes -lt 5) {
-        $durationMinutes = 5
+    # Ensure a minimum of 10 minutes is recorded to account for what a tech would be required to do.
+    if ($durationMinutes -lt 10) {
+        $durationMinutes = 10
     }
 
     # Post timer entry to the ticket
