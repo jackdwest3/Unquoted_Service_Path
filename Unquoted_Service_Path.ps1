@@ -1,3 +1,6 @@
+# Writen by Jack West
+# Latest version located at https://github.com/jackdwest3/Unquoted_Service_Path
+
 # Import Syncro Module
 Import-Module $env:SyncroModule
 
