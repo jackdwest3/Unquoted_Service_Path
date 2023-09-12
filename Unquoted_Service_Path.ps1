@@ -4,7 +4,10 @@ Import-Module $env:SyncroModule
 # List of individual services on the machine
 $InstalledServices = Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services" -ErrorAction SilentlyContinue
 
+# Intialize varibles
 $timeTaken = 0
+$backupFolder = "C:\Support\RegBackups"
+$techFolder = "C:\Support"
 
 # Empty list to collect paths needing fixes
 $VulnerablePaths = @()
@@ -50,12 +53,11 @@ if ($VulnerablePaths.Count -gt 0) {
     # Logging activity for restore point
     Log-Activity -Message "System restore point created." -EventName "Restore Point Created"
 
-    # Make sure backup folders are present
-    ## Check if C:\Support directory exists and create if not
-    if (!(Test-Path "C:\Support")) {
-        mkdir "C:\Support";
+    # Check if tech directory exists and create if not
+    if (!(Test-Path $techFolder)) {
+        New-Item -Path $techFolder -ItemType Directory
     }
-    $backupFolder = "C:\Support\RegBackups"
+    # Make sure backup folders are present
     if (-not (Test-Path $backupFolder)) {
        New-Item -Path $backupFolder -ItemType Directory
     }
