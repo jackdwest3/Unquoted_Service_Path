@@ -4,6 +4,8 @@ Import-Module $env:SyncroModule
 # List of individual services on the machine
 $InstalledServices = Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services" -ErrorAction SilentlyContinue
 
+$timeTaken = 0
+
 # Empty list to collect paths needing fixes
 $VulnerablePaths = @()
 $CorrectedPaths = @()
@@ -32,9 +34,6 @@ if ($VulnerablePaths.Count -gt 0) {
     # Create ticket
     $ticketInfo = Create-Syncro-Ticket -Subject "Vulnerable Service Path Found" -IssueType "Security" -Status "New"
     $ticketId = $ticketInfo.ticket.id
-
-    # Start the timer with minimum time for Tech to create ticket from lead and elevate to required priviledges
-    $timeTaken = 7
 
     # Add initial comment
     Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketId -Subject "Initial Issue" -Body "Found vulnerable service path(s) that need to be fixed for vulnerabilities."
@@ -112,24 +111,20 @@ if ($VulnerablePaths.Count -gt 0) {
     Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketId -Subject "Completed" -Body $completedBody
 
     # Calculate the duration in minutes, rounded up to the nearest 5 minutes
-    $roundedMinutes = [math]::Ceiling($timeTaken.TotalMinutes / 5) * 5
-
+    $timeTaken += 7
+    $roundedMinutes = [math]::Ceiling($timeTaken / 5) * 5
+    
     # This ensures the following:
     # 5-9 minutes -> 10 minutes
     # 10-14 minutes -> 15 minutes
     # ... and so on
 
-    # Ensure a minimum of 10 minutes is recorded to account for what a tech would be required to do.
-    if ($durationMinutes -lt 10) {
-        $durationMinutes = 10
-    }
-
     # Post timer entry to the ticket
     # Calculate the start time for the entry based on duration
-    $startAt = (Get-Date).AddMinutes(-$durationMinutes).toString("o")
+    $startAt = (Get-Date).AddMinutes(-$roundedMinutes).toString("o")
 
     # Add timer entry to the ticket
-    Create-Syncro-Ticket-TimerEntry -TicketIdOrNumber $ticketId -StartTime $startAt -DurationMinutes $durationMinutes -Notes "Vulnerable service path correction." -UserIdOrEmail "jack@westcomputers.com" -ChargeTime "true"
+    Create-Syncro-Ticket-TimerEntry -TicketIdOrNumber $ticketId -StartTime $startAt -DurationMinutes $roundedMinutes -Notes "Vulnerable service path correction." -UserIdOrEmail "jack@westcomputers.com" -ChargeTime "true"
 
     # Simply updates a ticket, only currently supports status and custom fields.
     Update-Syncro-Ticket -TicketIdOrNumber $ticketId -Status "Resolved"
