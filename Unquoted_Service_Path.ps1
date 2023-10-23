@@ -89,12 +89,17 @@ if ($VulnerablePaths.Count -gt 0) {
             $counter++
         }
 
-        $backupPath = Join-Path -Path $backupFolder -ChildPath ($service.PSChildName + ".reg")
+        # Get the current date and time and format it
+        $timestamp = Get-Date -Format "_MMddyyyy_HHmm"
+
+        # Update $backupPath to include the timestamp
+        $backupPath = Join-Path -Path $backupFolder -ChildPath ($service.PSChildName + $timestamp + ".reg")
+
         Write-Host "Constructed backup path: $backupPath" # Debugging line
 
         # Transform to REG compatible format
         $regFormatPath = $service.PSPath -replace 'Microsoft.PowerShell.Core\\Registry::', ''
-    
+
         # Log the transformed path (for debugging)
         Write-Host "Attempting to export: $regFormatPath"
 
