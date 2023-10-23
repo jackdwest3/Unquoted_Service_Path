@@ -51,16 +51,21 @@ if ($VulnerablePaths.Count -gt 0) {
     # Add updte comment that creating restore point
     Create-Syncro-Ticket-Comment -TicketIdOrNumber $ticketId -Subject "Update" -Body "Creating Windows restore point."
 
+    try {
     # Create a System Restore Point
     Checkpoint-Computer -Description "Before Service Path Corrections" -RestorePointType "Modify_Settings"
+    } catch {
+    # Handle the error here (you can log it or simply ignore it)
+    Write-Host "Error occurred creating restore point: $($_.Exception.Message)"
+    }
     # Logging activity for restore point
     Log-Activity -Message "System restore point created." -EventName "Restore Point Created"
 
-    # Check if tech directory exists and create if not
-    if (!(Test-Path $techFolder)) {
-        New-Item -Path $techFolder -ItemType Directory
-    }
     # Make sure backup folders are present
+    ## Check if C:\Support directory exists and create if not
+    if (!(Test-Path $techFolder)) {
+        mkdir $techFolder
+    }
     if (-not (Test-Path $backupFolder)) {
        New-Item -Path $backupFolder -ItemType Directory
     }
